@@ -1,4 +1,16 @@
 DROP TABLE users CASCADE;
+DROP TABLE forums CASCADE;
+DROP TABLE threads CASCADE;
+DROP TABLE posts CASCADE;
+DROP TABLE votes CASCADE;
+DROP TABLE forum_users CASCADE;
+
+DROP FUNCTION update_threads_count() CASCADE;
+DROP FUNCTION update_forum_users_by_insert_th_or_post() CASCADE;
+DROP FUNCTION update_path() CASCADE;
+DROP FUNCTION insert_votes() CASCADE;
+DROP FUNCTION update_votes() CASCADE;
+
 CREATE EXTENSION IF NOT EXISTS CITEXT;
 CREATE UNLOGGED TABLE "users" (
   "about" text NOT NULL,
@@ -7,9 +19,9 @@ CREATE UNLOGGED TABLE "users" (
   "nickname" citext collate "C" PRIMARY KEY
 );
 
-CREATE INDEX index_users_all ON users USING hash (nickname);
+-- CREATE INDEX index_users_all ON users (nickname);
+CREATE INDEX index_users_allH ON users USING hash (nickname);
 
-DROP TABLE forums CASCADE;
 CREATE UNLOGGED TABLE "forums" (
   "username" citext collate "C" NOT null,
   "posts" BIGINT DEFAULT 0,
@@ -20,8 +32,9 @@ CREATE UNLOGGED TABLE "forums" (
 );
 
 CREATE INDEX index_forums_slug ON forums USING hash (slug);
+-- CREATE INDEX index_users_fk ON forums (username);
+-- CREATE INDEX index_forum_all ON forums (slug, title, author, posts, threads);
 
-DROP TABLE threads CASCADE;
 CREATE UNLOGGED TABLE "threads" (
   "id" SERIAL PRIMARY KEY,
   "author" citext collate "C" NOT NULL,
@@ -32,12 +45,17 @@ CREATE UNLOGGED TABLE "threads" (
   "title" TEXT NOT NULL,
   "votes" int DEFAULT 0,
   FOREIGN KEY (author) REFERENCES "users" (nickname)
+--   FOREIGN KEY (forum) REFERENCES "forums" (slug)
 );
 
+-- CREATE INDEX index_threads_slug ON threads (slug);
 CREATE INDEX index_thread_slug_hash ON threads USING hash (slug);
+-- CREATE INDEX index_thread_users_fk ON threads (author);
+-- CREATE INDEX index_thread_forum_fk ON threads (forum);
 
+CREATE INDEX index_thread_forum_created ON threads (forum, created);
+-- CREATE INDEX index_thread_all ON threads (title, message, created, slug, author, forum, votes);
 
-DROP TABLE posts CASCADE;
 CREATE UNLOGGED TABLE "posts" (
   "author" citext collate "C" NOT NULL,
   "created" timestamp DEFAULT now(),
@@ -50,30 +68,36 @@ CREATE UNLOGGED TABLE "posts" (
   "path" BIGINT[] DEFAULT ARRAY []::INTEGER[],
   
   FOREIGN KEY (author) REFERENCES "users" (nickname)
+--   FOREIGN KEY (forum) REFERENCES "forums" (slug)
+--   FOREIGN KEY (thread) REFERENCES "threads" (id)
+--   FOREIGN KEY (parent) REFERENCES "posts" (id)
 );
 
--- CREATE INDEX index_post_thread_created_id ON posts (thread, created, id);
+CREATE INDEX index_posts_authorid ON posts (thread, id, path);
+CREATE INDEX index_posts_authorp ON posts (thread, path);
+CREATE INDEX index_post_path1_path ON posts ((path[1]), path);
+CREATE INDEX index_post_thread_created_id ON posts (thread, created, id);
 
-DROP TABLE votes CASCADE;
 CREATE UNLOGGED TABLE "votes" (
   "thread" int,
   "nickname" citext collate "C" NOT NULL,
   "voice" int,
   
    FOREIGN KEY (nickname) REFERENCES "users" (nickname),
+--    FOREIGN KEY (thread) REFERENCES "threads" (id),
    UNIQUE (nickname, thread)
 );
 
+-- CREATE INDEX index_votes_thread_nick ON votes (thread, nickname);
 
-DROP TABLE forum_users CASCADE;
 CREATE UNLOGGED TABLE forum_users
 (
     author citext collate "C" REFERENCES users (nickname) ON DELETE CASCADE NOT NULL,
     slug   citext collate "C" NOT NULL,
     UNIQUE (author, slug)
 );
+-- CREATE INDEX on forum_users (slug);
 
-DROP FUNCTION update_threads_count() CASCADE;
 CREATE OR REPLACE FUNCTION update_threads_count() RETURNS TRIGGER AS
 $update_users_forum$
 BEGIN
@@ -88,7 +112,6 @@ CREATE TRIGGER add_thread
     FOR EACH ROW
 EXECUTE PROCEDURE update_threads_count();
 
-DROP FUNCTION update_forum_users_by_insert_th_or_post() CASCADE;
 CREATE OR REPLACE FUNCTION update_forum_users_by_insert_th_or_post()
 RETURNS TRIGGER AS
 $BODY$
@@ -105,7 +128,6 @@ CREATE TRIGGER thread_insert_forum
     FOR EACH ROW
 EXECUTE PROCEDURE update_forum_users_by_insert_th_or_post();
 
-DROP FUNCTION update_path() CASCADE;
 CREATE OR REPLACE FUNCTION update_path() RETURNS TRIGGER AS
 $update_path$
 DECLARE
@@ -136,7 +158,7 @@ CREATE TRIGGER path_update
     FOR EACH ROW
 EXECUTE PROCEDURE update_path();
 
-DROP FUNCTION insert_votes() CASCADE;
+
 CREATE OR REPLACE FUNCTION insert_votes() RETURNS TRIGGER AS
 $update_users_forum$
 BEGIN
@@ -155,7 +177,7 @@ CREATE TRIGGER add_vote
     FOR EACH ROW
 EXECUTE PROCEDURE insert_votes();
 
-DROP FUNCTION update_votes() CASCADE;
+
 CREATE OR REPLACE FUNCTION update_votes() RETURNS TRIGGER AS
 $update_users_forum$
 BEGIN

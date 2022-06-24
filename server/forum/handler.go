@@ -5,7 +5,6 @@ import (
 
 	json "github.com/mailru/easyjson"
 
-	//"encoding/json"
 	"DBMSForum/models"
 	forumRep "DBMSForum/server/forum/rep"
 	threadRep "DBMSForum/server/thread/rep"
@@ -19,7 +18,6 @@ func ClearHandler(ctx *fasthttp.RequestCtx) {
 	ctx.SetContentType("application/json")
 	err := forumRep.ClearForum()
 	if err != nil {
-		// log.Println(err)
 		return
 	}
 
@@ -33,7 +31,6 @@ func StatusHandler(ctx *fasthttp.RequestCtx) {
 	status := forumRep.StatusForum()
 	body, err := json.Marshal(status)
 	if err != nil {
-		// log.Println(err)
 		return
 	}
 
@@ -58,7 +55,6 @@ func Create(ctx *fasthttp.RequestCtx) {
 			ctx.Write(models.MarshalErrorSt("Can't find user"))
 			return
 		}
-		// log.Println(err)
 		return
 	}
 
@@ -68,13 +64,11 @@ func Create(ctx *fasthttp.RequestCtx) {
 	if err == sql.ErrNoRows {
 		err = forumRep.InsertForum(forum)
 		if err != nil {
-			// log.Println(err)
 			return
 		}
 
 		body, err := json.Marshal(forum)
 		if err != nil {
-			// log.Println(err)
 			return
 		}
 
@@ -84,13 +78,11 @@ func Create(ctx *fasthttp.RequestCtx) {
 		return
 	}
 	if err != nil {
-		// log.Println(err)
 		return
 	}
 
 	body, err := json.Marshal(conflictForum)
 	if err != nil {
-		// log.Println(err)
 		return
 	}
 
@@ -111,13 +103,11 @@ func Details(ctx *fasthttp.RequestCtx) {
 			ctx.Write(models.MarshalErrorSt("Can't find forum"))
 			return
 		}
-		// log.Println(err)
 		return
 	}
 
 	body, err := json.Marshal(forum)
 	if err != nil {
-		// log.Println(err)
 		return
 	}
 
@@ -139,9 +129,6 @@ func Users(ctx *fasthttp.RequestCtx) {
 	since := string(query.Peek("since"))
 
 	desc := query.GetBool("desc")
-	//if err != nil {
-	//	desc = false
-	//}
 
 	if !forumRep.CheckForum(slug) {
 		ctx.SetStatusCode(fasthttp.StatusNotFound)
@@ -151,13 +138,11 @@ func Users(ctx *fasthttp.RequestCtx) {
 
 	users, err := userRep.FindByForum(slug, since, limit, desc)
 	if err != nil {
-		// log.Println(err)
 		return
 	}
 
 	body, err := json.Marshal(users)
 	if err != nil {
-		// log.Println(err)
 		return
 	}
 
@@ -177,9 +162,6 @@ func Threads(ctx *fasthttp.RequestCtx) {
 	since := string(query.Peek("since"))
 
 	desc := query.GetBool("desc")
-	//if err != nil {
-	//	desc = false
-	//}
 
 	slug := ctx.UserValue("slug").(string)
 
@@ -191,13 +173,11 @@ func Threads(ctx *fasthttp.RequestCtx) {
 
 	threads, err := threadRep.FindThreads(slug, since, limit, desc)
 	if err != nil {
-		// log.Println(err)
 		return
 	}
 
 	body, err := json.Marshal(threads)
 	if err != nil {
-		// log.Println(err)
 		return
 	}
 
