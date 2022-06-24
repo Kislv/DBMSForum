@@ -36,6 +36,7 @@ CREATE UNLOGGED TABLE "threads" (
 
 CREATE INDEX index_thread_slug_hash ON threads USING hash (slug);
 
+CREATE INDEX index_thread_forum_created ON threads (forum, created);
 
 DROP TABLE posts CASCADE;
 CREATE UNLOGGED TABLE "posts" (
@@ -52,7 +53,10 @@ CREATE UNLOGGED TABLE "posts" (
   FOREIGN KEY (author) REFERENCES "users" (nickname)
 );
 
--- CREATE INDEX index_post_thread_created_id ON posts (thread, created, id);
+CREATE INDEX index_posts_authorid ON posts (thread, id, path);
+CREATE INDEX index_posts_authorp ON posts (thread, path);
+CREATE INDEX index_post_path1_path ON posts ((path[1]), path);
+CREATE INDEX index_post_thread_created_id ON posts (thread, created, id);
 
 DROP TABLE votes CASCADE;
 CREATE UNLOGGED TABLE "votes" (
