@@ -19,3 +19,4 @@
 run.sh
 stop.sh
 lin.sh
+db/initOld.sql
