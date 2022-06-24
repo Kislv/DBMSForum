@@ -49,4 +49,4 @@ EXPOSE 5000
 
 ENV PGPASSWORD password
 
-CMD service postgresql start && psql -h localhost -d forum -U vitya -p 5432 -a -q -f /app/script/init.sql && /app/api-server
+CMD service postgresql start && psql -h localhost -d forum -U vitya -p 5432 -a -q -f /app/db/init.sql && /app/api-server
