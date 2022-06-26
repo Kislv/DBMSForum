@@ -7,8 +7,6 @@ CREATE UNLOGGED TABLE "users" (
   "nickname" citext collate "C" PRIMARY KEY
 );
 
-CREATE INDEX index_users_all ON users USING hash (nickname);
-
 DROP TABLE forums CASCADE;
 CREATE UNLOGGED TABLE "forums" (
   "username" citext collate "C" NOT null,
@@ -18,8 +16,6 @@ CREATE UNLOGGED TABLE "forums" (
   "title" TEXT NOT NULL,
   FOREIGN KEY ("username") REFERENCES "users" (nickname)
 );
-
-CREATE INDEX index_forums_slug ON forums USING hash (slug);
 
 DROP TABLE threads CASCADE;
 CREATE UNLOGGED TABLE "threads" (

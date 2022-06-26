@@ -20,3 +20,4 @@ run.sh
 stop.sh
 lin.sh
 db/initOld.sql
+db/init3.sql
